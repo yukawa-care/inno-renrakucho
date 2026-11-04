@@ -1,0 +1,22 @@
+# 院の連絡帳の設定
+# 院名・店舗・スタッフ・店長などは、置いたあとにアプリの「はじめの設定」で決めます（ここを書きかえる必要はありません）。
+# 合言葉はここに書かず、置くときに INCHO_PASSCODE / STAFF_PASSCODE として入れます。
+
+name = "renrakucho"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "renrakucho-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+# 古い記録を消すのは、毎日はじめにアプリが開かれたときに行います（時刻の予約は使いません）
+
+[vars]
+# お試し用にするときだけ "1"。院で使うときは "0" のまま
+DEMO = "0"

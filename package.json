@@ -1,0 +1,29 @@
+{
+  "name": "staff-board",
+  "private": true,
+  "version": "1.0.0",
+  "description": "院の連絡帳 — 見たら印がつく、スタッフどうしの連絡帳",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.150.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "DB": {
+        "description": "記録を置くデータベースです。名前はそのままでかまいません。"
+      },
+      "INCHO_PASSCODE": {
+        "description": "**院長の合言葉**を決めて入れてください（6文字以上）。院長だけが知っておくものです。紙に控えてください。"
+      },
+      "STAFF_PASSCODE": {
+        "description": "**スタッフの合言葉**を決めて入れてください（6文字以上・院長の合言葉とは別のもの）。スタッフには口で伝えます。"
+      },
+      "DEMO": {
+        "description": "そのまま **0** にしてください（1 はお試し用です）。"
+      }
+    }
+  }
+}
