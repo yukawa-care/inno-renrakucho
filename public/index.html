@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>院の連絡帳</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#2c5d63">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="連絡帳">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#f3f5f4;--paper:#ffffff;--ink:#1d2a2e;--muted:#5d6b6f;--line:#d8dfdd;
+  --accent:#2c5d63;--accent-soft:#e2eeee;
+  --ok:#2f7a4b;--ok-soft:#e3f2e8;--wait:#a35a00;--wait-soft:#fbeedb;
+  --imp:#b3261e;--imp-soft:#fbe9e7;
+  --f-head:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#141a1b;--paper:#1c2426;--ink:#e6ecea;--muted:#9aa8a6;--line:#2f3a3c;
+  --accent:#7fb7bc;--accent-soft:#1f3436;--ok:#7ccf98;--ok-soft:#1b3326;--wait:#f0b25e;--wait-soft:#3a2b14;
+  --imp:#ff8a80;--imp-soft:#3a1d1b;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.7}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.date{font-family:var(--f-head);font-weight:700;font-size:26px;letter-spacing:.02em;line-height:1.3}
+.sub{color:var(--muted);font-size:14px}
+.me{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.link{font:inherit;font-size:14px;background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;padding:0}
+
+/* 店舗の切り替え */
+.stores{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.stores button{font:inherit;font-family:var(--f-head);font-weight:700;font-size:14px;white-space:nowrap;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  border-radius:999px;padding:5px 14px;cursor:pointer;flex:none}
+.stores button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.stores .badge{margin-left:4px}
+
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:2px solid var(--line)}
+.tabs button{font:inherit;font-family:var(--f-head);font-weight:700;font-size:13px;white-space:nowrap;background:none;border:0;color:var(--muted);
+  padding:10px 2px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.badge{display:inline-block;min-width:20px;font-size:12px;line-height:20px;border-radius:10px;background:var(--wait);color:var(--paper);margin-left:3px;font-variant-numeric:tabular-nums;text-align:center}
+
+.status{font-family:var(--f-head);font-weight:700;border-radius:10px;padding:12px 16px;font-size:17px}
+.status.wait{background:var(--wait-soft);color:var(--wait)}
+.status.ok{background:var(--ok-soft);color:var(--ok)}
+.err{background:var(--wait-soft);color:var(--wait);border-radius:10px;padding:10px 14px;font-size:15px}
+
+.pane{display:flex;flex-direction:column;gap:16px}
+.list{display:flex;flex-direction:column;gap:12px}
+.empty{color:var(--muted);font-size:15px;padding:8px 4px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.mine-wait{border-color:var(--wait)}
+.card.imp{border:2px solid var(--imp)}
+.card.done{opacity:.65}
+.top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tag{font-family:var(--f-head);font-weight:700;font-size:13px;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:1px 8px}
+.tag.imp{color:var(--paper);background:var(--imp)}
+.tag.all{color:var(--paper);background:var(--accent)}
+.meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.text{font-size:17px;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.checks{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font-size:13px;border-radius:999px;padding:1px 10px;border:1px solid}
+.chip.ok{color:var(--ok);background:var(--ok-soft);border-color:transparent}
+.chip.wait{color:var(--wait);border-color:var(--wait)}
+.count{font-size:13px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.btn{font:inherit;font-family:var(--f-head);font-weight:700;font-size:16px;align-self:flex-start;background:var(--accent);color:var(--paper);
+  border:0;border-radius:10px;padding:9px 20px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.ghost{background:var(--paper);color:var(--accent);border:1px solid var(--accent)}
+.btn.small{font-size:14px;padding:5px 12px}
+.btn:disabled{opacity:.45;cursor:default}
+.done-note{font-size:14px;color:var(--ok)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.replies{display:flex;flex-direction:column;gap:6px;border-top:1px dashed var(--line);padding-top:8px}
+.reply{font-size:15px;overflow-wrap:anywhere}
+.reply b{font-family:var(--f-head);font-size:13px;color:var(--accent);margin-right:6px}
+.reply .meta{margin-left:6px}
+.replyform{display:flex;gap:6px}
+.replyform input{flex:1;min-width:0}
+
+.write{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.write h2,.past summary,.section-title{font-family:var(--f-head);font-size:17px;margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,textarea,input{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:100%}
+textarea{width:100%;min-height:80px;resize:vertical}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.check-label{display:flex;gap:8px;align-items:center;font-size:15px}
+.check-label input{width:20px;height:20px;flex:none}
+.past summary{cursor:pointer;font-weight:700;font-size:16px;color:var(--muted)}
+.past .list{margin-top:12px}
+.past .card{opacity:.8}
+
+/* 今日いる人 */
+.people{display:flex;flex-direction:column;gap:2px}
+.person{display:grid;grid-template-columns:5.5em 1fr;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.person:last-child{border-bottom:0}
+.pname{font-family:var(--f-head);font-weight:700}
+.pstat{font-size:15px;min-width:0;overflow-wrap:anywhere}
+.pill{display:inline-block;font-size:13px;font-weight:700;border-radius:999px;padding:1px 10px;margin-right:6px}
+.pill.in{background:var(--ok-soft);color:var(--ok)}
+.pill.late{background:var(--wait-soft);color:var(--wait)}
+.pill.off{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.pill.none{color:var(--muted)}
+.mystat{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:10px}
+.mystat input{width:100%}
+
+/* 全店まとめ */
+.ov{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.ovcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.ovcard:hover{border-color:var(--accent)}
+.ovcard.alert{border-left:6px solid var(--wait)}
+.ovname{font-family:var(--f-head);font-weight:700;font-size:20px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ovname .meta{font-family:var(--f-body);font-weight:400}
+.ovgrid{display:grid;grid-template-columns:1fr auto;gap:2px 12px;font-size:15px}
+.ovgrid .v{font-family:var(--f-head);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.ovgrid .v.warn{color:var(--wait)}
+.ovgrid .v.zero{color:var(--muted);font-weight:500}
+
+/* 訪問 */
+.route{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-variant-numeric:tabular-nums}
+.route .arrow{color:var(--muted)}
+.route .stop{padding:2px 8px;border-radius:6px;background:var(--bg)}
+.latest{font-family:var(--f-head);font-weight:700;font-size:16px}
+.latest.late{color:var(--wait)}
+.latest.fine{color:var(--ok)}
+.btnrow{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.btnrow .btn{align-self:stretch;padding:14px 8px;text-align:center}
+.btn.warn{background:var(--wait)}
+
+/* 点検 */
+.chk{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.chk:last-child{border-bottom:0}
+.chk input{width:24px;height:24px;margin:0}
+.chk label{font-size:16px;min-width:0;overflow-wrap:anywhere}
+.chk .meta{white-space:nowrap}
+.chk.is-done label{color:var(--muted);text-decoration:line-through}
+.rm{font:inherit;font-size:13px;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0;align-self:flex-start}
+
+/* お試し・設定 */
+.demo{background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:10px 14px;font-size:14px}
+.demo b{font-family:var(--f-head)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-family:var(--f-head);font-weight:700;font-size:15px}
+.field input,.field textarea,.field select{width:100%}
+.storeblock{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.storeblock .sname{font-family:var(--f-head);font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.okmsg{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:10px 14px;font-size:15px}
+
+/* 入る画面 */
+.login{max-width:420px;margin:10vh auto 0;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.login h1{font-family:var(--f-head);font-size:22px;margin:0}
+.login input{width:100%}
+.login .pin{font-size:24px;letter-spacing:.4em;text-align:center}
+.names{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.names .btn{align-self:stretch;text-align:center;line-height:1.4}
+.names .btn small{display:block;font-family:var(--f-body);font-weight:400;font-size:12px;opacity:.8}
+
+/* 院の帳 */
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{font:inherit;font-family:var(--f-head);font-weight:700;font-size:14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.seg .badge{margin-left:4px}
+.dayhead{font-family:var(--f-head);font-weight:700;font-size:15px;color:var(--muted);margin:4px 0 -4px}
+.dayhead.today{color:var(--accent)}
+.ev{display:grid;grid-template-columns:3.6em 1fr auto;gap:8px;align-items:baseline}
+.ev .t{font-family:var(--f-head);font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
+.rulebody{font-size:16px;white-space:pre-wrap;overflow-wrap:anywhere;border-left:3px solid var(--accent-soft);padding-left:10px}
+.prog{height:8px;border-radius:4px;background:var(--bg);overflow:hidden}
+.prog span{display:block;height:100%;background:var(--ok)}
+.pr{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.pr:last-child{border-bottom:0}
+.pr .lb{min-width:0;overflow-wrap:anywhere}
+.pr select{font-size:15px;padding:4px 6px}
+.pill.mid{background:var(--accent-soft);color:var(--accent)}
+.card.tome{border-color:var(--ok);background:linear-gradient(0deg,var(--paper),var(--paper)),var(--ok-soft)}
+.thx-to{font-family:var(--f-head);font-weight:700}
+.tpl{display:flex;flex-wrap:wrap;gap:6px}
+.tpl button{font:inherit;font-size:13px;border:1px dashed var(--accent);background:none;color:var(--accent);border-radius:999px;padding:2px 10px;cursor:pointer}
+.todayev{background:var(--accent-soft);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:2px;font-size:15px}
+.todayev b{font-family:var(--f-head);color:var(--accent)}
+.hit{background:var(--wait-soft);color:inherit;border-radius:3px;padding:0 1px}
+.searchrow{display:flex;gap:8px}
+.searchrow input{flex:1;min-width:0}
+
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<!-- 入る画面 -->
+<div class="wrap" id="loginView" hidden>
+  <form class="login" id="loginForm" autocomplete="off">
+    <h1>院の連絡帳</h1>
+    <p class="hint" style="margin:-8px 0 0">見たら印がつく、スタッフどうしの連絡帳</p>
+    <div id="stepDemo" hidden>
+      <div class="demo"><b>お試し用です。</b>合言葉なしで、役を選んで入れます。書いた内容は毎日元に戻ります。実際の院の記録は書かないでください。</div>
+      <p class="hint" style="margin-top:10px">だれとして試しますか？</p>
+      <div class="names" id="demoPeople"></div>
+    </div>
+    <div id="stepPass">
+      <label for="pass" class="hint">院の合言葉</label>
+      <input id="pass" type="password" autocomplete="current-password">
+    </div>
+    <div id="stepName" hidden>
+      <p class="hint">自分の名前を押してください。</p>
+      <div class="names" id="names"></div>
+    </div>
+    <div id="stepPin" hidden>
+      <p class="hint" id="pinLead"></p>
+      <input id="pin" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" aria-label="暗証番号">
+      <div id="pin2Box" hidden>
+        <p class="hint">確かめのため、もう一度入れてください。</p>
+        <input id="pin2" class="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" aria-label="暗証番号（もう一度）">
+      </div>
+      <p class="hint">暗証番号を忘れたら、院長に再設定を頼んでください。</p>
+    </div>
+    <div class="err" id="loginErr" hidden></div>
+    <div class="actions">
+      <button class="btn" id="loginBtn" type="submit">入る</button>
+      <button class="link" id="loginBack" type="button" hidden>最初に戻る</button>
+    </div>
+  </form>
+</div>
+
+<!-- 使う画面 -->
+<div class="wrap" id="appView" hidden>
+  <header>
+    <div>
+      <div class="date" id="today"></div>
+      <div class="sub" id="clinic"></div>
+    </div>
+    <div class="me"><span id="meName"></span><button class="link" id="logout">出る</button></div>
+  </header>
+
+  <div class="demo" id="demoBand" hidden><b>お試し用です。</b>書いた内容は毎日元に戻ります。実際の院の記録は書かないでください。</div>
+  <div class="stores" id="storeBar" hidden></div>
+  <div class="err" id="appErr" hidden></div>
+
+  <!-- 設定（院長） -->
+  <section class="pane" id="pane-settings" hidden>
+    <div class="write">
+      <h2 id="cfTitle">設定</h2>
+      <p class="hint" id="cfLead"></p>
+      <div class="field"><label for="cfClinic">院の名前</label><input id="cfClinic" maxlength="40" placeholder="例：さくら鍼灸院"></div>
+      <div class="field"><label for="cfStores">店舗</label><input id="cfStores" placeholder="例：本院（数店舗なら 本院,北店）">
+        <p class="hint">一つなら一つだけ。いくつもあるときは、カンマ（,）か読点（、）で区切ります。</p></div>
+      <div class="list" id="cfStoreBlocks"></div>
+      <div class="field"><label for="cfTags">連絡の種類（四つまで）</label><input id="cfTags" placeholder="朝礼,予約の変更,連絡"></div>
+      <div class="field"><label for="cfTemplates">よく使う連絡（定型文。1行に1つ、10まで）</label>
+        <textarea id="cfTemplates" style="min-height:90px"></textarea>
+        <p class="hint">ボードに書くとき、押すだけで入ります。</p></div>
+      <div class="field"><label>残す日数（0 は自動で消さない）</label>
+        <div class="two">
+          <div><p class="hint">連絡・今日いる人・点検・訪問・予定・ありがとう</p><input id="cfRetainPost" type="number" min="0" max="3650" inputmode="numeric"></div>
+          <div><p class="hint">済んだ申し送り・備品</p><input id="cfRetainHand" type="number" min="0" max="3650" inputmode="numeric"></div>
+        </div>
+        <p class="hint">何日にするかは、院の決まりで決めてください 🔴</p></div>
+      <div class="err" id="cfErr" hidden></div>
+      <div class="actions"><button class="btn" id="cfSave">保存する</button><button class="link" id="cfCancel">やめて戻る</button></div>
+    </div>
+
+    <div class="write" id="passBox">
+      <h2>合言葉を変える</h2>
+      <p class="hint">スタッフが辞めたときや、合言葉が外にもれたときに変えます。変えると、その合言葉で入っていた人は全員入り直しになります。6文字以上。空のままの欄は変わりません。</p>
+      <div class="field"><label for="pwStaff">新しいスタッフの合言葉</label><input id="pwStaff" type="text" autocomplete="off" maxlength="60"></div>
+      <div class="field"><label for="pwIncho">新しい院長の合言葉</label><input id="pwIncho" type="text" autocomplete="off" maxlength="60"></div>
+      <div class="err" id="pwErr" hidden></div>
+      <div class="okmsg" id="pwOk" hidden></div>
+      <button class="btn ghost small" id="pwSave">合言葉を変える</button>
+    </div>
+  </section>
+
+  <!-- 全店まとめ（院長） -->
+  <section class="pane" id="pane-overview" hidden>
+    <div class="status" id="ovStatus"></div>
+    <div class="ov" id="ovList"></div>
+    <div class="write">
+      <h2>控え</h2>
+      <p class="hint">全店舗の記録を、表のファイル（Excelで開ける形）にまとめて保存します。店舗の列で分けて見られます。</p>
+      <a class="btn ghost small" href="/api/export" download>全店舗の控えを保存する</a>
+    </div>
+  </section>
+
+  <div id="storeView">
+  <div class="pane">
+  <div class="list" id="impBand"></div>
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <!-- ボード -->
+  <section class="pane" id="pane-board">
+    <div class="todayev" id="todayEv" hidden></div>
+    <div class="card">
+      <div class="section-title">今日いる人</div>
+      <div class="people" id="people"></div>
+      <div class="mystat" id="mystat"></div>
+    </div>
+
+    <div class="status" id="status"></div>
+    <div class="list" id="list"></div>
+
+    <div class="write" id="write" hidden>
+      <h2>連絡を書く</h2>
+      <div class="row"><label for="tag" class="hint">種類</label><select id="tag"></select></div>
+      <div class="row" id="destRow" hidden><label for="dest" class="hint">出す先</label><select id="dest"></select></div>
+      <div class="tpl" id="tplRow" hidden></div>
+      <textarea id="body" maxlength="1000" placeholder="例：本日は16時で受付終了です。"></textarea>
+      <label class="check-label"><input type="checkbox" id="imp"> 大事な連絡にする（確認するまで、いちばん上に出続けます）</label>
+      <p class="hint">院の決まりで「書かない」と決めたことは書きません。迷ったら口で伝えます。</p>
+      <button class="btn" id="post" disabled>ボードに出す</button>
+    </div>
+
+    <details class="past">
+      <summary>過去の連絡（2週間分）</summary>
+      <div class="list" id="pastList"></div>
+    </details>
+
+    <div class="write" id="inchoTools" hidden>
+      <h2>院長の道具</h2>
+      <div>
+        <p class="hint">院名・店舗・スタッフ・店長・連絡の種類・定型文・残す日数・合言葉を変えます。</p>
+        <button class="btn ghost small" id="openSettings">設定を変える</button>
+      </div>
+      <div>
+        <p class="hint">控え：これまでの記録を、表のファイル（Excelで開ける形）で保存します。月に一度、院のパソコンに置いてください。</p>
+        <a class="btn ghost small" id="exportLink" href="/api/export" download>控えを保存する</a>
+      </div>
+      <div>
+        <p class="hint">スタッフの暗証番号：忘れたときや、ほかの人が先に決めてしまったときに再設定します。押すと、その人はいったん入り直しになり、次に入るときに新しい暗証番号を決めます。</p>
+        <div class="list" id="pinList"></div>
+      </div>
+    </div>
+
+    <div class="write" id="phoneBox">
+      <h2>このスマホで</h2>
+      <div id="installBox">
+        <p class="hint" id="installHint"></p>
+        <button class="btn ghost small" id="installBtn" hidden>ホーム画面に置く</button>
+      </div>
+      <div id="pushBox">
+        <p class="hint" id="pushHint"></p>
+        <div class="actions">
+          <button class="btn ghost small" id="pushOn" hidden>お知らせを受け取る</button>
+          <button class="btn ghost small" id="pushTest" hidden>試しに送る</button>
+          <button class="link" id="pushOff" hidden>受け取るのをやめる</button>
+        </div>
+        <div class="okmsg" id="pushMsg" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 申し送り -->
+  <section class="pane" id="pane-handoff" hidden>
+    <div class="status" id="hStatus"></div>
+    <div class="list" id="hList"></div>
+    <div class="write">
+      <h2>申し送りを書く</h2>
+      <textarea id="hBody" maxlength="1000" placeholder="例：ベッド2の高さ調整のレバーが固いです。"></textarea>
+      <p class="hint">院の決まりで「書かない」と決めたことは書きません。迷ったら院長に聞きます。</p>
+      <button class="btn" id="hPost" disabled>申し送りを出す</button>
+    </div>
+  </section>
+
+  <!-- 訪問 -->
+  <section class="pane" id="pane-visit" hidden>
+    <div class="status" id="vStatus"></div>
+    <div class="list" id="vList"></div>
+    <div class="write">
+      <h2>今日の流れを書く</h2>
+      <div class="row" id="routeWhoRow"><label for="routeWho" class="hint">だれの流れ</label><select id="routeWho"></select></div>
+      <textarea id="routeBody" placeholder="1行に1つずつ。例：&#10;10:00 出発&#10;10:30 1件目&#10;12:00 帰院予定"></textarea>
+      <p class="hint">住所や、どの家かがわかる書き方はしません。ボタンを押すのは止まってから。</p>
+      <button class="btn" id="routeSave">流れを出す</button>
+    </div>
+  </section>
+
+  <!-- 点検・備品 -->
+  <section class="pane" id="pane-care" hidden>
+    <div class="card" id="chkBox"></div>
+    <div class="write" id="chkAdd" hidden>
+      <h2>点検の項目を足す</h2>
+      <div class="row">
+        <select id="chkPhase"><option>開院前</option><option>閉院後</option></select>
+        <input id="chkLabel" maxlength="40" placeholder="例：待合の加湿器の水" style="flex:1;min-width:0">
+      </div>
+      <button class="btn small" id="chkAddBtn">足す</button>
+    </div>
+
+    <div class="status" id="sStatus"></div>
+    <div class="list" id="sList"></div>
+    <div class="write">
+      <h2>なくなりそうな物を書く</h2>
+      <input id="sItem" maxlength="40" placeholder="例：フェイスタオル">
+      <input id="sNote" maxlength="60" placeholder="ひとこと（例：あと3枚）">
+      <button class="btn" id="sPost" disabled>書く</button>
+    </div>
+  </section>
+
+  <!-- 院の帳 -->
+  <section class="pane" id="pane-book" hidden>
+    <div class="seg" id="bookSeg"></div>
+
+    <div class="pane" id="book-events">
+      <div class="list" id="evList"></div>
+      <div class="write" id="evWrite" hidden>
+        <h2>予定を入れる</h2>
+        <div class="row">
+          <input id="evDay" type="date" aria-label="日にち">
+          <input id="evTime" type="time" aria-label="時刻（なくてもよい）">
+        </div>
+        <div class="row" id="evDestRow" hidden><label for="evDest" class="hint">出す先</label><select id="evDest"></select></div>
+        <input id="evText" maxlength="200" placeholder="例：院内の勉強会／ベッドの点検の業者さんが来ます">
+        <p class="hint">時刻はなくてもかまいません。通ってこられる方の予約は、ここには書きません。</p>
+        <button class="btn" id="evAdd">入れる</button>
+      </div>
+    </div>
+
+    <div class="pane" id="book-rules" hidden>
+      <div class="status" id="ruStatus"></div>
+      <div class="list" id="ruList"></div>
+      <div class="write" id="ruWrite" hidden>
+        <h2 id="ruFormTitle">決まり・マニュアルを書く</h2>
+        <input id="ruTitle" maxlength="40" placeholder="題（例：休むときの連絡）">
+        <div class="row" id="ruDestRow" hidden><label for="ruDest" class="hint">出す先</label><select id="ruDest"></select></div>
+        <textarea id="ruBody" maxlength="4000" style="min-height:140px" placeholder="例：前の日までに「今日いる人」で「休みます」を押し、院長にも電話で伝えます。"></textarea>
+        <p class="hint">書きかえると、スタッフの「読みました」はいったん外れ、もう一度読んでもらう形になります。</p>
+        <div class="actions"><button class="btn" id="ruSave">出す</button><button class="link" id="ruCancel" hidden>書きかえをやめる</button></div>
+      </div>
+    </div>
+
+    <div class="pane" id="book-practice" hidden>
+      <div class="row" id="prWhoRow" hidden><label for="prWho" class="hint">だれの表</label><select id="prWho"></select></div>
+      <div class="card" id="prBox"></div>
+      <p class="hint" id="prHint"></p>
+      <div class="write" id="prAdd" hidden>
+        <h2>練習の項目を足す</h2>
+        <input id="prLabel" maxlength="40" placeholder="例：洗濯機の回し方">
+        <button class="btn small" id="prAddBtn">足す</button>
+      </div>
+    </div>
+
+    <div class="pane" id="book-thanks" hidden>
+      <div class="write">
+        <h2>ありがとうカードを送る</h2>
+        <div class="row"><label for="thTo" class="hint">だれに</label><select id="thTo"></select></div>
+        <input id="thText" maxlength="200" placeholder="例：朝のタオルの準備、ありがとうございました！">
+        <button class="btn" id="thSend" disabled>送る</button>
+      </div>
+      <div class="list" id="thList"></div>
+    </div>
+
+    <div class="pane" id="book-search" hidden>
+      <form class="searchrow" id="seForm">
+        <input id="seWord" maxlength="40" placeholder="例：タオル／ベッド2" aria-label="探す言葉">
+        <button class="btn" type="submit">探す</button>
+      </form>
+      <p class="hint">ボードの連絡・返信・申し送り・決まり・予定・ありがとうから探します（残っている分だけ）。</p>
+      <div class="list" id="seList"></div>
+    </div>
+  </section>
+  </div>
+  </div>
+</div>
+
+<script>
+let S=null, OV=null, HELLO=null, tab="board", busy=false, loginName="", loginMode="", view="store", cfFilled=false;
+let curStore=null, bookTab="events", ruEdit=null, seResults=null, seWordShown="";
+try{curStore=localStorage.getItem("renraku-store");view=localStorage.getItem("renraku-view")||"store";bookTab=localStorage.getItem("renraku-book")||"events"}catch(e){}
+const $=id=>document.getElementById(id);
+const wd="日月火水木金土";
+function el(t,c,txt){const e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e}
+function jst(iso){return new Date(new Date(iso).getTime()+9*3600e3)}
+function hm(iso){const d=jst(iso);return `${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2,"0")}`}
+function md(iso){const d=jst(iso);return `${d.getUTCMonth()+1}/${d.getUTCDate()}`}
+function mdhm(iso){const d=jst(iso),t=jst(new Date().toISOString());return (d.getUTCDate()===t.getUTCDate()&&d.getUTCMonth()===t.getUTCMonth()?"":md(iso)+" ")+hm(iso)}
+function remember(){try{localStorage.setItem("renraku-store",curStore||"");localStorage.setItem("renraku-view",view);localStorage.setItem("renraku-book",bookTab)}catch(e){}}
+function fmtDay(day){const t=day.split("-").map(Number);const d=new Date(Date.UTC(t[0],t[1]-1,t[2]));return `${t[1]}月${t[2]}日（${wd[d.getUTCDay()]}）`}
+// 選ぶ欄の中身を、変わったときだけ入れかえる（選んでいるものは残す）
+function setOptions(sel,items){
+  const want=items.map(x=>Array.isArray(x)?x:[x,x]);
+  const have=[...sel.options].map(o=>[o.value,o.text]);
+  if(JSON.stringify(want)===JSON.stringify(have))return;
+  const cur=sel.value;
+  sel.replaceChildren(...want.map(([v,t])=>{const o=el("option",null,t);o.value=v;return o}));
+  if(want.some(([v])=>v===cur))sel.value=cur;
+}
+// 消すボタンは二度押し（一度目で「本当に消す」に変わる）
+function twoStep(b,label,fn){b.onclick=()=>{if(b.dataset.armed){fn();return}b.dataset.armed="1";b.textContent=label;setTimeout(()=>{delete b.dataset.armed;b.textContent=b.dataset.orig},4000)};b.dataset.orig=b.textContent}
+
+async function call(path,body){
+  const r=await fetch(path,{method:body?"POST":"GET",headers:body?{"content-type":"application/json"}:{},body:body?JSON.stringify(body):undefined,credentials:"same-origin"});
+  const data=await r.json().catch(()=>({}));
+  if(r.status===401&&path!=="/api/login"){showLogin();throw new Error("login")}
+  if(!r.ok)throw new Error(data.error||"うまくいきませんでした。もう一度押してください。");
+  return data;
+}
+function showErr(msg){const e=$("appErr");e.textContent=msg||"";e.hidden=!msg}
+
+/* ---------- 入る ---------- */
+function loginStep(step){
+  $("stepPass").hidden=step!=="pass";$("stepName").hidden=step!=="name";$("stepPin").hidden=step!=="pin";
+  $("loginBtn").hidden=step==="name";$("loginBack").hidden=step==="pass";
+  $("loginErr").hidden=true;
+  if(step==="pass")setTimeout(()=>$("pass").focus(),0);
+  if(step==="pin"){$("pin").value="";$("pin2").value="";setTimeout(()=>$("pin").focus(),0)}
+}
+function showLogin(){
+  $("appView").hidden=true;$("loginView").hidden=false;$("pass").value="";loginName="";
+  if(HELLO&&HELLO.demo){
+    $("stepDemo").hidden=false;$("stepPass").hidden=true;$("stepName").hidden=true;$("stepPin").hidden=true;$("loginBtn").hidden=true;$("loginBack").hidden=true;
+    $("demoPeople").replaceChildren(...HELLO.people.map(x=>{const b=el("button","btn ghost",x.name);b.append(el("small",null,x.role));b.type="button";
+      b.onclick=async()=>{try{await call("/api/login",{as:x.name});$("loginView").hidden=true;curStore=null;view=x.name==="院長"?"overview":"store";await load()}catch(e){$("loginErr").textContent=e.message;$("loginErr").hidden=false}};return b}));
+    return;
+  }
+  loginStep("pass");
+}
+$("loginBack").onclick=()=>showLogin();
+async function tryLogin(){
+  $("loginErr").hidden=true;
+  const body={passcode:$("pass").value};
+  if(loginName)body.name=loginName;
+  if(loginMode&&!$("stepPin").hidden){body.pin=$("pin").value;if(loginMode==="set")body.pin2=$("pin2").value}
+  try{
+    const d=await call("/api/login",body);
+    if(d.needName){
+      $("names").replaceChildren(...d.names.map(x=>{const b=el("button","btn ghost",x.name);if(x.stores)b.append(el("small",null,x.stores));b.type="button";b.onclick=()=>{loginName=x.name;tryLogin()};return b}));
+      loginStep("name");return;
+    }
+    if(d.needPin||d.needSetPin){
+      loginMode=d.needSetPin?"set":"enter";
+      $("pinLead").textContent=d.needSetPin?`${d.name}さん、はじめて入るので、自分だけの暗証番号（数字4けた）を決めてください。`:`${d.name}さんの暗証番号（数字4けた）`;
+      $("pin2Box").hidden=!d.needSetPin;
+      loginStep("pin");return;
+    }
+    $("loginView").hidden=true;loginMode="";await load();
+  }catch(e){$("loginErr").textContent=e.message;$("loginErr").hidden=false;if(!$("stepPin").hidden){$("pin").value="";$("pin2").value=""}}
+}
+$("loginForm").addEventListener("submit",e=>{e.preventDefault();tryLogin()});
+$("logout").onclick=async()=>{
+  // 受付の共用スマホなどで、次の人にお知らせが行かないように、出るときは受け取りもやめる
+  if(pushSub){try{await call("/api/push/unsubscribe",{endpoint:pushSub.endpoint})}catch{};try{await pushSub.unsubscribe()}catch{};pushSub=null}
+  try{await call("/api/logout",{})}catch{};S=null;OV=null;pushSynced=false;showLogin()};
+
+/* ---------- 読む ---------- */
+async function load(){
+  try{
+    S=await call("/api/state?store="+encodeURIComponent(curStore||""));
+    curStore=S.store;
+    const multi=S.stores.length>1&&S.me.role==="incho";
+    if(S.config&&S.config.needsSetup&&!S.demo){if(view!=="settings")cfFilled=false;view="settings"}
+    if(view==="settings"&&S.me.role!=="incho")view="store";
+    if(!multi&&view==="overview")view="store";
+    if(multi&&view==="overview")OV=await call("/api/overview");
+    remember();
+    showErr("");$("appView").hidden=false;$("loginView").hidden=true;render();
+  }catch(e){if(e.message!=="login")showErr(e.message)}
+}
+async function act(path,body){
+  if(busy)return false;busy=true;
+  try{await call(path,{store:curStore,...body});await load();return true}
+  catch(e){if(e.message!=="login")showErr(e.message);return false}
+  finally{busy=false}
+}
+function goStore(s){curStore=s;view="store";tab="board";remember();load()}
+function goOverview(){view="overview";remember();load()}
+
+/* ---------- 描く ---------- */
+const isIncho=()=>S.me.role==="incho";
+const meName=()=>S.me.name;
+const canManage=()=>S.me.manages.includes(S.store);
+const multi=()=>S.stores.length>1;
+const unreadByMe=p=>!isIncho()&&p.recipients.includes(meName())&&!p.checked.includes(meName());
+
+function replyBlock(p){
+  const box=el("div","replies");
+  p.replies.forEach(r=>{const d=el("div","reply");d.append(el("b",null,r.author),document.createTextNode(r.text),el("span","meta",mdhm(r.created_at)));box.append(d)});
+  const f=el("form","replyform");
+  const inp=el("input");inp.maxLength=200;inp.placeholder="ひとこと返信";inp.setAttribute("aria-label","ひとこと返信");
+  const b=el("button","btn small ghost","返す");b.type="submit";
+  f.append(inp,b);
+  f.onsubmit=async e=>{e.preventDefault();const t=inp.value.trim();if(!t)return;if(await act(`/api/posts/${p.id}/reply`,{text:t}))inp.value=""};
+  box.append(f);
+  return box;
+}
+function boardCard(p,isPast){
+  const c=el("div","card");
+  const mineWait=unreadByMe(p);
+  const someoneWait=p.recipients.some(s=>!p.checked.includes(s));
+  if(p.important&&(isIncho()||canManage()?someoneWait:mineWait))c.classList.add("imp");
+  else if(mineWait&&!isPast)c.classList.add("mine-wait");
+  const top=el("div","top");
+  if(p.important)top.append(el("span","tag imp","大事"));
+  if(p.store==="*"&&multi())top.append(el("span","tag all","全店舗"));
+  top.append(el("span","tag",p.tag),el("span","meta",`${p.author}・${isPast?md(p.created_at)+" ":""}${hm(p.created_at)}`));
+  c.append(top,el("div","text",p.text));
+  if(p.recipients.length){
+    const ch=el("div","checks");
+    p.recipients.forEach(s=>{const ok=p.checked.includes(s);ch.append(el("span","chip "+(ok?"ok":"wait"),ok?`${s} ✓`:`${s} まだ`))});
+    ch.append(el("span","count",`確認済み ${p.recipients.filter(n=>p.checked.includes(n)).length}/${p.recipients.length}人`));
+    c.append(ch);
+  }
+  const acts=el("div","actions");
+  if(mineWait){const b=el("button","btn","確認しました");b.onclick=()=>act(`/api/posts/${p.id}/check`,{});acts.append(b)}
+  else if(!isIncho()&&p.recipients.includes(meName()))acts.append(el("span","done-note","確認済みです"));
+  const canImp=p.store==="*"?isIncho():(isIncho()||S.me.manages.includes(p.store));
+  if(canImp){const b=el("button","btn small ghost",p.important?"大事の印を外す":"大事にする");b.onclick=()=>act(`/api/posts/${p.id}/important`,{on:!p.important});acts.append(b)}
+  if(acts.children.length)c.append(acts);
+  c.append(replyBlock(p));
+  return c;
+}
+function handCard(h){
+  const c=el("div","card"+(h.done_at?" done":""));
+  const top=el("div","top");top.append(el("span","tag","申し送り"),el("span","meta",`${h.author}・${md(h.created_at)} ${hm(h.created_at)}`));
+  c.append(top,el("div","text",h.text));
+  if(h.done_at)c.append(el("div","done-note",`済み（${h.done_by}・${md(h.done_at)} ${hm(h.done_at)}）`));
+  else{const b=el("button","btn ghost","済みにする");b.onclick=()=>act(`/api/handoffs/${h.id}/done`,{});c.append(b)}
+  return c;
+}
+function visitCard(name,v){
+  const c=el("div","card");
+  const top=el("div","top");top.append(el("span","tag",name),el("span","meta","今日の訪問"));c.append(top);
+  if(v.stops.length){const r=el("div","route");v.stops.forEach((s,i)=>{if(i)r.append(el("span","arrow","→"));r.append(el("span","stop",s))});c.append(r)}
+  const l=v.log[v.log.length-1];
+  c.append(el("div","latest"+(l?(l.label==="遅れます"?" late":" fine"):""),l?`最新：${l.label}（${hm(l.at)}）`:"まだ出発していません"));
+  if(v.log.length>1)c.append(el("div","meta",v.log.map(x=>`${hm(x.at)} ${x.label}`).join("　")));
+  if(!isIncho()&&meName()===name){
+    const row=el("div","btnrow");
+    S.visitLabels.forEach(lab=>{const b=el("button","btn"+(lab==="遅れます"?" warn":""),lab);b.onclick=()=>act("/api/visits/status",{label:lab});row.append(b)});
+    c.append(row);
+  }
+  return c;
+}
+function supplyCard(s){
+  const c=el("div","card"+(s.done_at?" done":""));
+  const top=el("div","top");top.append(el("span","tag","備品"),el("span","meta",`${s.author}・${mdhm(s.created_at)}`));
+  c.append(top,el("div","text",s.item+(s.note?`　${s.note}`:"")));
+  if(s.done_at)c.append(el("div","done-note",`買った・補充した（${s.done_by}・${mdhm(s.done_at)}）`));
+  else{const b=el("button","btn ghost small","買った・補充した");b.onclick=()=>act(`/api/supplies/${s.id}/done`,{});c.append(b)}
+  return c;
+}
+function setStatus(id,wait,msg){const s=$(id);s.className="status "+(wait?"wait":"ok");s.textContent=msg}
+
+const PILL={"出勤":"in","院内":"in","遅れます":"late","外出":"late","休みます":"off"};
+function renderPeople(){
+  const all=["院長",...S.staff];
+  $("people").replaceChildren(...all.map(n=>{
+    const a=S.attendance[n];
+    const row=el("div","person");row.append(el("span","pname",n));
+    const st=el("span","pstat");
+    if(a){
+      st.append(el("span","pill "+(PILL[a.status]||"in"),a.status));
+      if(multi()&&n!=="院長"&&a.store&&a.store!==S.store)st.append(document.createTextNode(`（${a.store}）`));
+      if(a.note)st.append(document.createTextNode(a.note));
+      st.append(el("span","meta","　"+hm(a.updated_at)+(a.set_by!==n?`（${a.set_by}）`:"")));
+    }else st.append(el("span","pill none",n==="院長"?"—":"まだ連絡なし"));
+    row.append(st);return row}));
+
+  const box=$("mystat");box.replaceChildren();
+  let who=meName();
+  const choices=isIncho()?all:(canManage()?S.staff:[]);
+  if(choices.length){
+    const sel=el("select");sel.id="attWho";sel.setAttribute("aria-label","だれの分");
+    choices.forEach(n=>sel.append(el("option",null,n)));
+    const def=isIncho()?"院長":meName();
+    sel.value=window._attWho&&choices.includes(window._attWho)?window._attWho:def;
+    sel.onchange=()=>{window._attWho=sel.value;renderPeople()};
+    who=sel.value;
+    const r=el("div","row");r.append(el("span","hint","だれの分："),sel);box.append(r);
+  }
+  const opts=who==="院長"?S.inchoStatus:S.staffStatus;
+  const note=el("input");note.maxLength=60;note.id="attNote";
+  note.placeholder=who==="院長"?"ひとこと（例：14時〜16時 外出）":"ひとこと（例：10時ごろ着きます）";
+  note.setAttribute("aria-label","ひとこと");
+  if(window._attNote)note.value=window._attNote;
+  note.oninput=()=>{window._attNote=note.value};
+  const btns=el("div","btnrow");
+  opts.forEach(o=>{const b=el("button","btn"+(o==="遅れます"||o==="休みます"?" warn":""),o==="出勤"?(multi()?`${S.store}に出勤`:"出勤しました"):o);
+    b.onclick=async()=>{if(await act("/api/attendance",{name:who,status:o,note:note.value})){window._attNote=""}};btns.append(b)});
+  box.append(el("span","hint",choices.length?"今日の様子を入れる":"自分の今日の様子"),note,btns);
+  if(S.attendance[who]){const clr=el("button","rm","取り消す");clr.onclick=()=>act("/api/attendance",{name:who,status:""});box.append(clr)}
+}
+
+function renderCare(){
+  const box=$("chkBox");box.replaceChildren();
+  const items=S.checklist.items, done=S.checklist.done;
+  S.phases.forEach(ph=>{
+    const its=items.filter(i=>i.phase===ph);
+    const left=its.filter(i=>!done[i.id]).length;
+    const h=el("div","top");h.append(el("span","section-title",`${ph}の点検`),el("span","meta",its.length?(left?`のこり ${left}`:"すべて済み"):""));
+    box.append(h);
+    if(!its.length){box.append(el("div","empty","項目がありません。"));return}
+    its.forEach(i=>{
+      const d=done[i.id];
+      const row=el("div","chk"+(d?" is-done":""));
+      const cb=el("input");cb.type="checkbox";cb.id="chk"+i.id;cb.checked=!!d;
+      cb.onchange=()=>act(`/api/checklist/${i.id}/toggle`,{on:cb.checked});
+      const lb=el("label",null,i.label);lb.htmlFor=cb.id;
+      const right=el("span","meta",d?`${d.name} ${hm(d.done_at)}`:"");
+      if(canManage()&&!d){const rm=el("button","rm","外す");rm.onclick=()=>act(`/api/checklist/items/${i.id}/remove`,{});right.append(rm)}
+      row.append(cb,lb,right);box.append(row);
+    });
+  });
+  $("chkAdd").hidden=!canManage();
+
+  const open=S.supplies.filter(s=>!s.done_at);
+  setStatus("sStatus",open.length,open.length?`なくなりそうな物が ${open.length}件 あります`:"なくなりそうな物はありません");
+  const ss=[...open,...S.supplies.filter(s=>s.done_at)];
+  $("sList").replaceChildren(...(ss.length?ss.map(supplyCard):[]));
+}
+
+function renderStoreBar(){
+  const bar=$("storeBar");
+  const mine=S.me.stores;
+  const showOv=isIncho()&&multi();
+  bar.hidden=!(mine.length>1||showOv);
+  if(bar.hidden)return;
+  bar.replaceChildren();
+  if(showOv){const b=el("button",null,"全店まとめ");b.setAttribute("aria-pressed",view==="overview");b.onclick=goOverview;bar.append(b)}
+  mine.forEach(s=>{
+    const b=el("button",null,s);b.setAttribute("aria-pressed",view==="store"&&s===S.store);
+    if(OV&&view==="overview"){const o=OV.stores.find(x=>x.store===s);const n=o?o.unread+o.late+o.visitLate:0;if(n)b.append(el("span","badge",n))}
+    b.onclick=()=>goStore(s);bar.append(b)});
+}
+
+/* ---------- 設定（院長） ---------- */
+function cfStoresNow(){return [...new Set($("cfStores").value.replace(/[、，]/g,",").split(",").map(x=>x.trim()).filter(Boolean))]}
+function cfSplit(v){return v.replace(/[、，\n]/g,",").split(",").map(x=>x.trim()).filter(Boolean)}
+function renderStoreBlocks(keep){
+  const c=S.config, stores=cfStoresNow();
+  const prev={};
+  $("cfStoreBlocks").querySelectorAll(".storeblock").forEach(b=>{prev[b.dataset.store]={staff:b.querySelector("textarea").value,mgr:b.querySelector("select")?b.querySelector("select").value:""}});
+  $("cfStoreBlocks").replaceChildren(...stores.map((s,i)=>{
+    const b=el("div","storeblock");b.dataset.store=s;
+    b.append(el("div","sname",stores.length>1?`「${s}」`:"スタッフ"));
+    const ta=el("textarea");ta.id="cfStaff"+i;ta.style.minHeight="60px";ta.placeholder="例：北川,小野,松井（院長は入れません）";
+    const fromCfg=Object.keys(c.staff).filter(n=>c.staff[n].includes(s)).join(",");
+    ta.value=keep&&prev[s]?prev[s].staff:fromCfg;
+    const lab=el("label",null,stores.length>1?"この店舗のスタッフ（二つの店舗で働く人は、両方に書きます）":"スタッフの名前");lab.htmlFor=ta.id;lab.className="hint";
+    b.append(lab,ta);
+    if(stores.length>1){
+      const sel=el("select");sel.id="cfMgr"+i;sel.setAttribute("aria-label",`${s}の店長`);
+      const fill=()=>{const cur=sel.value||((keep&&prev[s])?prev[s].mgr:((c.managers.find(m=>m.endsWith("@"+s))||"").split("@")[0]));
+        sel.replaceChildren(el("option",null,"店長なし"),...cfSplit(ta.value).map(n=>el("option",null,n)));sel.options[0].value="";
+        sel.value=cfSplit(ta.value).includes(cur)?cur:""};
+      fill();ta.addEventListener("input",fill);
+      const r=el("div","row");r.append(el("span","hint","店長："),sel);b.append(r);
+    }
+    return b}));
+}
+function fillSettings(){
+  const c=S.config;
+  $("cfTitle").textContent=c.needsSetup?"はじめの設定":"設定";
+  $("cfLead").textContent=c.needsSetup?"はじめに、院の名前とスタッフの名前を入れてください。あとから、いつでも変えられます。":"変えたら「保存する」を押します。スタッフの画面にも、すぐに反映されます。";
+  $("cfClinic").value=c.clinic||"";
+  $("cfStores").value=c.stores.join(",");
+  $("cfTags").value=c.tags.join(",");
+  $("cfTemplates").value=(c.templates||[]).join("\n");
+  $("cfRetainPost").value=c.retainPost||0;$("cfRetainHand").value=c.retainHandoff||0;
+  $("cfCancel").hidden=!!c.needsSetup;
+  $("cfErr").hidden=true;$("pwErr").hidden=true;$("pwOk").hidden=true;
+  $("passBox").hidden=!!c.needsSetup;
+  renderStoreBlocks(false);
+}
+$("cfStores").addEventListener("change",()=>renderStoreBlocks(true));
+$("cfStores").addEventListener("blur",()=>renderStoreBlocks(true));
+$("openSettings").onclick=()=>{view="settings";cfFilled=false;render();window.scrollTo(0,0)};
+$("cfCancel").onclick=()=>{view="store";render()};
+$("cfSave").onclick=async()=>{
+  renderStoreBlocks(true);
+  const stores=cfStoresNow(), staffBy={}, mgrBy={};
+  $("cfStoreBlocks").querySelectorAll(".storeblock").forEach(b=>{staffBy[b.dataset.store]=cfSplit(b.querySelector("textarea").value);const sel=b.querySelector("select");if(sel)mgrBy[b.dataset.store]=sel.value});
+  const body={clinic:$("cfClinic").value,stores,staffBy,mgrBy,tags:cfSplit($("cfTags").value),templates:$("cfTemplates").value.split("\n").map(x=>x.trim()).filter(Boolean),retainPost:$("cfRetainPost").value,retainHandoff:$("cfRetainHand").value};
+  try{await call("/api/settings",body);$("cfErr").hidden=true;view="store";curStore=null;cfFilled=false;await load();window.scrollTo(0,0)}
+  catch(e){if(e.message!=="login"){$("cfErr").textContent=e.message;$("cfErr").hidden=false}}
+};
+$("pwSave").onclick=async()=>{
+  $("pwErr").hidden=true;$("pwOk").hidden=true;
+  try{await call("/api/passcodes",{staff:$("pwStaff").value,incho:$("pwIncho").value});
+    const which=[$("pwStaff").value&&"スタッフ",$("pwIncho").value&&"院長"].filter(Boolean).join("と");
+    $("pwOk").textContent=`${which}の合言葉を変えました。新しい合言葉は紙に控え、スタッフには口で伝えてください。`;$("pwOk").hidden=false;
+    $("pwStaff").value="";$("pwIncho").value="";}
+  catch(e){if(e.message!=="login"){$("pwErr").textContent=e.message;$("pwErr").hidden=false}}
+};
+
+function renderOverview(){
+  const list=OV.stores;
+  const alerts=list.filter(o=>o.unread||o.late||o.off||o.visitLate).length;
+  setStatus("ovStatus",alerts,alerts?`気にかけたい店舗が ${alerts}つ あります`:"どの店舗も、いまのところ落ち着いています");
+  $("ovList").replaceChildren(...list.map(o=>{
+    const c=el("button","ovcard"+(o.unread||o.late||o.visitLate?" alert":""));c.type="button";
+    const n=el("div","ovname");n.append(document.createTextNode(o.store),el("span","meta",`${o.people}人`));c.append(n);
+    const g=el("div","ovgrid");
+    const add=(label,v,warn,suffix="")=>{g.append(el("span",null,label),el("span","v"+(v?(warn?" warn":""):" zero"),v+suffix))};
+    add("まだ全員が見ていない連絡",o.unread,true,"件");
+    add("出勤",o.in,false,"人");
+    add("遅れ・休み",o.late+o.off,true,"人");
+    add("まだ連絡なし",o.noword,false,"人");
+    add("点検ののこり",o.checkLeft,false,"");
+    add("なくなりそうな物",o.supplies,false,"件");
+    add("済んでいない申し送り",o.handoffs,false,"件");
+    add("訪問の遅れ",o.visitLate,true,"件");
+    c.append(g);
+    c.onclick=()=>goStore(o.store);
+    return c}));
+}
+
+function render(){
+  const t=S.today.split("-").map(Number);const d=new Date(Date.UTC(t[0],t[1]-1,t[2]));
+  $("today").textContent=`${t[1]}月${t[2]}日（${wd[d.getUTCDay()]}）`;
+  const head=S.clinic?`${S.clinic}　院の連絡帳`:"院の連絡帳";
+  $("clinic").textContent=view==="overview"?`${head}・全店まとめ`:(multi()?`${head}・${S.store}`:head);
+  $("meName").textContent=isIncho()?"院長":`${meName()}さん${canManage()?"（店長）":""}`;
+  $("demoBand").hidden=!S.demo;
+  const st=view==="settings"&&S.config;
+  renderStoreBar();
+  if(st)$("storeBar").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed","false"));
+
+  const ov=view==="overview"&&OV;
+  $("pane-settings").hidden=!st;
+  $("pane-overview").hidden=!ov;$("storeView").hidden=!!(ov||st);
+  if(st){if(!cfFilled){fillSettings();cfFilled=true}return}
+  if(ov){renderOverview();return}
+
+  const unread=(isIncho()||canManage())?S.posts.filter(p=>p.recipients.some(s=>!p.checked.includes(s))).length:S.posts.filter(unreadByMe).length;
+  const openH=S.handoffs.filter(h=>!h.done_at).length;
+  const visitNames=Object.keys(S.visits).filter(n=>S.staff.includes(n));
+  const late=visitNames.filter(n=>{const l=S.visits[n].log;return l.length&&l[l.length-1].label==="遅れます"}).length;
+  const openS=S.supplies.filter(s=>!s.done_at).length;
+
+  const allPosts=[...S.posts,...S.past];
+  const watcher=isIncho()||canManage();
+  const imps=allPosts.filter(p=>p.important&&(watcher?p.recipients.some(s=>!p.checked.includes(s)):unreadByMe(p)));
+  const band=$("impBand");band.replaceChildren();
+  if(imps.length&&!watcher)imps.forEach(p=>band.append(boardCard(p,p.day!==S.today)));
+  else if(imps.length)band.append(el("div","status wait",`大事な連絡で、まだ全員が確認していないものが ${imps.length}件 あります`));
+  band.hidden=!band.children.length;
+
+  const tabs=$("tabs");tabs.replaceChildren();
+  const ruUnread=isIncho()?0:S.rules.filter(r=>!r.readBy.includes(meName())).length;
+  [["board","ボード",unread],["handoff","申し送り",openH],["visit","訪問",late],["care","点検・備品",openS],["book","院の帳",ruUnread]].forEach(([k,lab,n])=>{
+    const b=el("button",null,lab);b.setAttribute("role","tab");b.setAttribute("aria-selected",k===tab);
+    if(n)b.append(el("span","badge",n));b.onclick=()=>{tab=k;render()};tabs.append(b)});
+  ["board","handoff","visit","care","book"].forEach(k=>$("pane-"+k).hidden=tab!==k);
+  setBadge(unread+ruUnread);
+
+  // ボード
+  const evToday=S.events.filter(x=>x.day===S.today);
+  $("todayEv").hidden=!evToday.length;
+  $("todayEv").replaceChildren(el("b",null,"今日の予定"),...evToday.map(x=>el("div",null,`${x.time?x.time+"　":""}${x.text}`)));
+  $("tplRow").hidden=!S.templates.length;
+  $("tplRow").replaceChildren(...S.templates.map(t=>{const b=el("button",null,t);b.type="button";
+    b.onclick=()=>{const ta=$("body");ta.value=ta.value.trim()?ta.value.replace(/\s*$/,"\n")+t:t;$("post").disabled=false;ta.focus()};return b}));
+  renderPeople();
+  if(watcher)setStatus("status",unread,unread?`まだ全員が見ていない連絡が ${unread}件 あります`:(S.posts.length?"今日の連絡は全員が確認しました":"今日の連絡はまだありません"));
+  else setStatus("status",unread,unread?`まだ見ていない連絡が ${unread}件 あります`:"今日の連絡はすべて確認済みです");
+  const shownInBand=new Set(watcher?[]:imps.map(p=>p.id));
+  const todays=S.posts.filter(p=>!shownInBand.has(p.id));
+  $("list").replaceChildren(...(todays.length?todays.map(p=>boardCard(p,false)):[el("div","empty",S.posts.length?"今日の連絡は、上の大事な連絡だけです。":"今日の連絡はまだありません。")]));
+  const pasts=S.past.filter(p=>!shownInBand.has(p.id));
+  $("pastList").replaceChildren(...(pasts.length?pasts.map(p=>boardCard(p,true)):[el("div","empty","過去の連絡はありません。")]));
+  $("write").hidden=!canManage();
+  $("destRow").hidden=!(isIncho()&&multi());
+  if(isIncho()&&multi()){const ds=$("dest");const want=[`この店舗（${S.store}）だけ`,"全店舗"];if(ds.options.length!==2||ds.options[0].text!==want[0]){ds.replaceChildren(el("option",null,want[0]),el("option",null,want[1]));ds.options[0].value="";ds.options[1].value="*"}}
+  $("inchoTools").hidden=!isIncho();
+  const tagSel=$("tag");if(tagSel.options.length!==S.tags.length)tagSel.replaceChildren(...S.tags.map(t=>el("option",null,t)));
+  if(isIncho()){
+    $("exportLink").textContent=multi()?`この店舗（${S.store}）の控えを保存する`:"控えを保存する";
+    $("exportLink").href=multi()?"/api/export?store="+encodeURIComponent(S.store):"/api/export";
+    $("pinList").replaceChildren(...S.allStaff.map(x=>{
+      const r=el("div","row");r.append(el("span","pname",x.name));
+      if(multi())r.append(el("span","meta",x.stores.join("・")));
+      r.append(el("span","meta",S.pinsSet.includes(x.name)?"暗証番号あり":"まだ決めていない"));
+      if(S.pinsSet.includes(x.name)){const b=el("button","btn small ghost","再設定する");b.onclick=()=>act("/api/pins/reset",{name:x.name});r.append(b)}
+      return r}));
+  }
+
+  // 申し送り
+  setStatus("hStatus",openH,openH?`まだ済んでいない申し送りが ${openH}件 あります`:"申し送りはすべて済みです");
+  const hs=[...S.handoffs.filter(h=>!h.done_at),...S.handoffs.filter(h=>h.done_at)];
+  $("hList").replaceChildren(...(hs.length?hs.map(handCard):[el("div","empty","申し送りはありません。")]));
+
+  // 訪問
+  const out=visitNames.filter(n=>{const l=S.visits[n].log;return l.length&&l[l.length-1].label!=="終わりました"}).length;
+  setStatus("vStatus",late,late?`遅れの連絡が ${late}件 あります`:`いま外に出ている人：${out}人`);
+  $("vList").replaceChildren(...(visitNames.length?visitNames.map(n=>visitCard(n,S.visits[n])):[el("div","empty","今日の訪問の流れはまだありません。")]));
+  $("routeWhoRow").hidden=!canManage();
+  const rw=$("routeWho");if(canManage()&&(rw.options.length!==S.staff.length||[...rw.options].some((o,i)=>o.text!==S.staff[i])))rw.replaceChildren(...S.staff.map(n=>el("option",null,n)));
+
+  // 点検・備品
+  renderCare();
+  // 院の帳
+  renderBook();
+  renderPhone();
+}
+
+/* ---------- 院の帳 ---------- */
+function renderBook(){
+  const ruUnread=isIncho()?0:S.rules.filter(r=>!r.readBy.includes(meName())).length;
+  const seg=$("bookSeg");seg.replaceChildren();
+  [["events","予定"],["rules","決まり",ruUnread],["practice","練習"],["thanks","ありがとう"],["search","探す"]].forEach(([k,lab,n])=>{
+    const b=el("button",null,lab);b.type="button";b.setAttribute("aria-pressed",k===bookTab);if(n)b.append(el("span","badge",n));
+    b.onclick=()=>{bookTab=k;remember();renderBook()};seg.append(b)});
+  ["events","rules","practice","thanks","search"].forEach(k=>$("book-"+k).hidden=bookTab!==k);
+  const destOpts=[["",`この店舗（${S.store}）だけ`],["*","全店舗"]];
+
+  // 予定
+  const evBox=$("evList");evBox.replaceChildren();
+  if(!S.events.length)evBox.append(el("div","empty","これから60日の予定はありません。"));
+  let lastDay="";
+  S.events.forEach(x=>{
+    if(x.day!==lastDay){lastDay=x.day;const tom=x.day===nextDay(S.today);
+      evBox.append(el("div","dayhead"+(x.day===S.today?" today":""),fmtDay(x.day)+(x.day===S.today?"　今日":tom?"　明日":"")))}
+    const c=el("div","card");const r=el("div","ev");
+    const body=el("span","text");if(x.store==="*"&&multi())body.append(el("span","tag all","全店舗")," ");body.append(x.text);
+    r.append(el("span","t",x.time||"—"),body);
+    const right=el("span","meta",x.author);
+    if(canManage()&&(x.store!=="*"||isIncho())||x.author===meName()){const rm=el("button","rm","消す");twoStep(rm,"本当に消す",()=>act(`/api/events/${x.id}/remove`,{}));right.append(" ",rm)}
+    r.append(right);c.append(r);evBox.append(c)});
+  $("evWrite").hidden=!canManage();
+  if(!$("evDay").value)$("evDay").value=S.today;
+  $("evDay").min=S.today;
+  $("evDestRow").hidden=!(isIncho()&&multi());
+  if(isIncho()&&multi())setOptions($("evDest"),destOpts);
+
+  // 決まり
+  const rr=S.rules;
+  if(isIncho()||canManage()){
+    const notAll=rr.filter(r=>S.staff.some(n=>!r.readBy.includes(n))).length;
+    setStatus("ruStatus",notAll,rr.length?(notAll?`まだ全員が読んでいない決まりが ${notAll}つ あります`:"どの決まりも、全員が読みました"):"決まり・マニュアルはまだありません");
+  }else setStatus("ruStatus",ruUnread,ruUnread?`まだ読んでいない決まりが ${ruUnread}つ あります`:(rr.length?"どの決まりも読みました":"決まり・マニュアルはまだありません"));
+  $("ruList").replaceChildren(...rr.map(r=>{
+    const mine=!isIncho()&&!r.readBy.includes(meName());
+    const c=el("div","card"+(mine?" mine-wait":""));
+    const top=el("div","top");top.append(el("span","tag","決まり"));
+    if(r.store==="*"&&multi())top.append(el("span","tag all","全店舗"));
+    top.append(el("span","meta",`${r.updated_by}・${md(r.updated_at)}に更新`));
+    c.append(top,el("div","section-title",r.title),el("div","rulebody",r.body));
+    if(S.staff.length&&(isIncho()||canManage())){
+      const ch=el("div","checks");
+      S.staff.forEach(n=>{const ok=r.readBy.includes(n);ch.append(el("span","chip "+(ok?"ok":"wait"),ok?`${n} ✓`:`${n} まだ`))});
+      ch.append(el("span","count",`読んだ ${S.staff.filter(n=>r.readBy.includes(n)).length}/${S.staff.length}人`));c.append(ch);
+    }
+    const acts=el("div","actions");
+    if(mine){const b=el("button","btn","読みました");b.onclick=()=>act(`/api/rules/${r.id}/read`,{});acts.append(b)}
+    else if(!isIncho())acts.append(el("span","done-note","読みました"));
+    if(r.store==="*"?isIncho():canManage()){
+      const ed=el("button","btn small ghost","書きかえる");ed.onclick=()=>{ruEdit=r.id;$("ruTitle").value=r.title;$("ruBody").value=r.body;$("ruFormTitle").textContent=`「${r.title}」を書きかえる`;$("ruCancel").hidden=false;$("ruDestRow").hidden=true;$("ruWrite").scrollIntoView({behavior:"smooth"})};
+      const rm=el("button","rm","消す");twoStep(rm,"本当に消す",()=>act(`/api/rules/${r.id}/remove`,{}));
+      acts.append(ed,rm);
+    }
+    if(acts.children.length)c.append(acts);
+    return c}));
+  if(!rr.length)$("ruList").append(el("div","empty",canManage()?"休むときの連絡、タオルの洗い方、電話の受け方など、院の決まりを書いておけます。":"院長・店長が書いた決まりが、ここに出ます。"));
+  $("ruWrite").hidden=!canManage();
+  if(!ruEdit){$("ruDestRow").hidden=!(isIncho()&&multi());if(isIncho()&&multi())setOptions($("ruDest"),destOpts)}
+
+  // 練習
+  const P=S.practice, items=P.items;
+  $("prWhoRow").hidden=!(canManage()&&P.people.length);
+  const prog=n=>items.filter(i=>((P.marks[n]||{})[i.id]||{}).level===2).length;
+  if(canManage())setOptions($("prWho"),P.people.map(n=>[n,`${n}（できた ${prog(n)}/${items.length}）`]));
+  const who=canManage()?$("prWho").value:(P.people[0]||"");
+  const box=$("prBox");box.replaceChildren();
+  if(!who){box.append(el("div","empty",canManage()?"この店舗にスタッフがいません。":"練習の表はありません。"))}
+  else if(!items.length)box.append(el("div","empty","練習の項目がありません。"));
+  else{
+    const done=prog(who);
+    const h=el("div","top");h.append(el("span","section-title",`${who}さんの練習`),el("span","meta",`できた ${done}/${items.length}`));
+    const bar=el("div","prog");const sp=el("span");sp.style.width=`${Math.round(done/items.length*100)}%`;bar.append(sp);
+    box.append(h,bar);
+    items.forEach(i=>{
+      const mk=(P.marks[who]||{})[i.id];const lv=mk?mk.level:0;
+      const row=el("div","pr");const lb=el("div","lb");lb.append(i.label);
+      if(mk)lb.append(el("div","meta",`${lv===2?"確かめた人":"入れた人"}：${mk.by}・${md(mk.at)}`));
+      const right=el("span","row");
+      if(canManage()){
+        const sel=el("select");sel.setAttribute("aria-label",i.label);
+        [["0","まだ"],["1","練習した"],["2","できた"]].forEach(([v,t])=>{const o=el("option",null,t);o.value=v;sel.append(o)});
+        sel.value=String(lv);sel.onchange=()=>act("/api/practice/mark",{item:i.id,name:who,level:Number(sel.value)});
+        right.append(sel);
+        const rm=el("button","rm","外す");twoStep(rm,"本当に外す",()=>act(`/api/practice/items/${i.id}/remove`,{}));right.append(rm);
+      }else if(lv===2)right.append(el("span","pill in","できた ✓"));
+      else{const b=el("button","btn small "+(lv?"":"ghost"),lv?"練習した ✓":"練習した");b.onclick=()=>act("/api/practice/mark",{item:i.id,name:who,level:lv?0:1});right.append(b)}
+      row.append(lb,right);box.append(row)});
+  }
+  $("prHint").textContent=canManage()?"本人が「練習した」を押します。見て確かめたら「できた」にします。":"練習したら「練習した」を押します。院長・店長が見て確かめると「できた」が付きます。";
+  $("prAdd").hidden=!canManage();
+
+  // ありがとう
+  const toList=["院長",...S.staff].filter(n=>n!==meName());
+  setOptions($("thTo"),toList.map(n=>[n,n==="院長"?"院長":`${n}さん`]));
+  const th=S.thanks;
+  $("thList").replaceChildren(...(th.length?th.map(x=>{
+    const c=el("div","card"+(x.to_name===meName()?" tome":""));
+    const top=el("div","top");top.append(el("span","thx-to",`${x.from_name} → ${x.to_name==="院長"?"院長":x.to_name+"さん"}`),el("span","meta",mdhm(x.created_at)));
+    c.append(top,el("div","text",x.text));
+    if(isIncho()||x.from_name===meName()){const rm=el("button","rm","消す");twoStep(rm,"本当に消す",()=>act(`/api/thanks/${x.id}/remove`,{}));c.append(rm)}
+    return c}):[el("div","empty","この30日のありがとうカードはありません。小さなことでも、送ってみてください。")]));
+
+  // 探す
+  renderSearch();
+}
+function nextDay(day){const t=day.split("-").map(Number);return new Date(Date.UTC(t[0],t[1]-1,t[2]+1)).toISOString().slice(0,10)}
+function withHits(text,word){
+  const box=el("div","text");if(!word){box.textContent=text;return box}
+  const low=text.toLowerCase(),w=word.toLowerCase();let i=0,j;
+  while((j=low.indexOf(w,i))>=0){box.append(text.slice(i,j),el("mark","hit",text.slice(j,j+word.length)));i=j+word.length}
+  box.append(text.slice(i));return box}
+function renderSearch(){
+  const box=$("seList");
+  if(!seResults){box.replaceChildren();return}
+  box.replaceChildren(el("div","meta",seResults.length?`「${seWordShown}」が ${seResults.length}件 見つかりました${seResults.length>=60?"（新しい60件まで）":""}`:`「${seWordShown}」は見つかりませんでした`),
+    ...seResults.map(x=>{const c=el("div","card");const top=el("div","top");
+      top.append(el("span","tag",x.kind));if(multi())top.append(el("span","meta",x.store==="*"?"全店舗":x.store));
+      top.append(el("span","meta",`${x.who}・${x.at.length>10?md(x.at)+" "+hm(x.at):x.at.slice(5).replace("-","/")}`));
+      c.append(top);if(x.parent)c.append(el("div","meta",`「${x.parent}」への返信`));c.append(withHits(x.text,seWordShown));return c}));
+}
+$("seForm").addEventListener("submit",async e=>{e.preventDefault();const w=$("seWord").value.trim();if(!w)return;
+  try{const d=await call("/api/search?q="+encodeURIComponent(w));seResults=d.results;seWordShown=w;renderSearch()}catch(x){if(x.message!=="login")showErr(x.message)}});
+$("prWho").onchange=()=>renderBook();
+$("prAddBtn").onclick=async()=>{const l=$("prLabel").value.trim();if(!l)return;if(await act("/api/practice/items",{label:l}))$("prLabel").value=""};
+$("evAdd").onclick=async()=>{const t=$("evText").value.trim();if(!t){showErr("予定の中身を書いてください。");return}
+  if(await act("/api/events",{day:$("evDay").value,time:$("evTime").value,text:t,dest:isIncho()&&multi()?$("evDest").value:""})){$("evText").value="";$("evTime").value=""}};
+function ruReset(){ruEdit=null;$("ruTitle").value="";$("ruBody").value="";$("ruFormTitle").textContent="決まり・マニュアルを書く";$("ruCancel").hidden=true}
+$("ruCancel").onclick=()=>{ruReset();renderBook()};
+$("ruSave").onclick=async()=>{
+  if(await act("/api/rules",{id:ruEdit||0,title:$("ruTitle").value,body:$("ruBody").value,dest:!ruEdit&&isIncho()&&multi()?$("ruDest").value:""})){ruReset();renderBook()}};
+$("thText").addEventListener("input",()=>{$("thSend").disabled=!$("thText").value.trim()});
+$("thSend").onclick=async()=>{if(await act("/api/thanks",{to:$("thTo").value,text:$("thText").value})){$("thText").value="";$("thSend").disabled=true}};
+
+/* ---------- ホーム画面に置く・スマホへのお知らせ ---------- */
+let deferredPrompt=null, swReg=null, pushSub=null, pushSynced=false;
+const standalone=()=>window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const isIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const pushReady=()=>!!(swReg&&swReg.pushManager&&"Notification" in window);
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;if(S)renderPhone()});
+window.addEventListener("appinstalled",()=>{deferredPrompt=null;if(S)renderPhone()});
+function setBadge(n){try{if(!navigator.setAppBadge)return;n?navigator.setAppBadge(n):navigator.clearAppBadge()}catch(e){}}
+function b64u(s){s=s.replace(/-/g,"+").replace(/_/g,"/");const b=atob(s+"=".repeat((4-s.length%4)%4));return Uint8Array.from(b,c=>c.charCodeAt(0))}
+async function initSW(){
+  if(!("serviceWorker" in navigator))return;
+  try{swReg=await navigator.serviceWorker.register("/sw.js");if(swReg.pushManager)pushSub=await swReg.pushManager.getSubscription()}catch(e){swReg=null}
+  if(S)renderPhone();
+}
+function pushNote(msg){const m=$("pushMsg");m.textContent=msg||"";m.hidden=!msg}
+function renderPhone(){
+  if(!S)return;
+  // ホーム画面に置く
+  const ih=$("installHint"), ib=$("installBtn");
+  ib.hidden=true;
+  if(standalone())ih.textContent="ホーム画面から開いています。";
+  else if(deferredPrompt){ih.textContent="ホーム画面に置くと、アプリのように一押しで開けます。";ib.hidden=false}
+  else if(isIOS())ih.textContent="ホーム画面に置くと、アプリのように一押しで開けます。Safariの［共有］ボタン（四角から上向きの矢印）→「ホーム画面に追加」を押します（表示の名前は、機種や版で少し違うことがあります）。";
+  else ih.textContent="ホーム画面に置くと、アプリのように一押しで開けます。ブラウザのメニュー（︙）→「ホーム画面に追加」または「アプリをインストール」を押します（表示の名前は、機種や版で少し違うことがあります）。";
+  // お知らせ
+  const h=$("pushHint");["pushOn","pushTest","pushOff"].forEach(id=>$(id).hidden=true);
+  if(S.demo){h.textContent="お試し用では、スマホへのお知らせは使えません。自院のアドレスで置くと使えます。";return}
+  if(!pushReady()){
+    h.textContent=isIOS()&&!standalone()?"iPhoneでは、ホーム画面に置いたアプリから開くと、お知らせを受け取れるようになります。先に上の手順でホーム画面に置き、そこから開いてください。":"このブラウザでは、お知らせを受け取れません。";return}
+  if(Notification.permission==="denied"){h.textContent="お知らせが「許可しない」になっています。スマホの設定で、このアプリ（またはブラウザ）のお知らせを許可してから、開き直してください。";return}
+  if(pushSub){h.textContent="このスマホで、お知らせを受け取っています。お知らせには「誰から・何の種類か」だけが出て、書いた中身は出ません（鍵の画面に出るため）。";$("pushTest").hidden=false;$("pushOff").hidden=false}
+  else{h.textContent="新しい連絡・返信・申し送り・決まり・ありがとうカード、遅れ・休みの連絡（院長・店長あて）が来たら、このスマホにお知らせが出るようにします。";$("pushOn").hidden=false}
+  if(pushSub&&!pushSynced){pushSynced=true;call("/api/push/subscribe",{endpoint:pushSub.endpoint}).catch(()=>{})}
+}
+$("installBtn").onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();try{await deferredPrompt.userChoice}catch(e){}deferredPrompt=null;renderPhone()};
+$("pushOn").onclick=async()=>{
+  pushNote("");
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){pushNote("お知らせが許可されませんでした。受け取るときは、もう一度押して「許可」を選んでください。");renderPhone();return}
+    const k=await call("/api/push/key");
+    if(!k.enabled)throw new Error("お試し用では使えません。");
+    const opts={userVisibleOnly:true,applicationServerKey:b64u(k.key)};
+    try{pushSub=await swReg.pushManager.subscribe(opts)}
+    catch(e){const old=await swReg.pushManager.getSubscription();if(old){await old.unsubscribe();pushSub=await swReg.pushManager.subscribe(opts)}else throw e}
+    await call("/api/push/subscribe",{endpoint:pushSub.endpoint});pushSynced=true;
+    pushNote("受け取るようにしました。「試しに送る」で、届くか確かめられます。");
+  }catch(e){if(e.message!=="login")pushNote("うまくいきませんでした："+e.message)}
+  renderPhone();
+};
+$("pushTest").onclick=async()=>{try{await call("/api/push/test",{});pushNote("送りました。数秒から1分ほどで、お知らせが出ます。出ないときは、スマホのお知らせの設定を見てください。")}catch(e){if(e.message!=="login")pushNote(e.message)}};
+$("pushOff").onclick=async()=>{try{if(pushSub){await call("/api/push/unsubscribe",{endpoint:pushSub.endpoint}).catch(()=>{});await pushSub.unsubscribe()}}catch(e){}pushSub=null;pushNote("このスマホでは、お知らせを受け取らないようにしました。");renderPhone()};
+
+/* ---------- 書く ---------- */
+$("body").addEventListener("input",()=>{$("post").disabled=!$("body").value.trim()});
+$("post").onclick=async()=>{
+  const dest=isIncho()&&multi()?$("dest").value:"";
+  if(await act("/api/posts",{tag:$("tag").value,text:$("body").value,important:$("imp").checked,dest})){$("body").value="";$("imp").checked=false;$("post").disabled=true}};
+$("hBody").addEventListener("input",()=>{$("hPost").disabled=!$("hBody").value.trim()});
+$("hPost").onclick=async()=>{if(await act("/api/handoffs",{text:$("hBody").value})){$("hBody").value="";$("hPost").disabled=true}};
+$("routeSave").onclick=async()=>{
+  const stops=$("routeBody").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(await act("/api/visits/route",{name:canManage()?$("routeWho").value:meName(),stops}))$("routeBody").value="";
+};
+$("chkAddBtn").onclick=async()=>{const l=$("chkLabel").value.trim();if(!l)return;if(await act("/api/checklist/items",{phase:$("chkPhase").value,label:l}))$("chkLabel").value=""};
+$("sItem").addEventListener("input",()=>{$("sPost").disabled=!$("sItem").value.trim()});
+$("sPost").onclick=async()=>{if(await act("/api/supplies",{item:$("sItem").value,note:$("sNote").value})){$("sItem").value="";$("sNote").value="";$("sPost").disabled=true}};
+
+/* ---------- 開いたとき・戻ってきたとき・30秒ごと ---------- */
+function typing(){const a=document.activeElement;return a&&(a.tagName==="TEXTAREA"||(a.tagName==="INPUT"&&a.type!=="checkbox"))}
+fetch("/api/hello").then(r=>r.json()).then(h=>{HELLO=h}).catch(()=>{}).finally(()=>load().then(()=>{if(!S)showLogin()}));
+initSW();
+setInterval(()=>{if(S&&!document.hidden&&!busy&&!typing()&&view!=="settings")load()},30000);
+document.addEventListener("visibilitychange",()=>{if(S&&!document.hidden&&!typing())load()});
+</script>
+</body>
+</html>
