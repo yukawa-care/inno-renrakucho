@@ -16,7 +16,14 @@
 
 ## 置く
 
-スマホでも置けます。下のボタンを押して、画面の案内に沿って進めてください。
+このページを見なくても置けます。押すだけのリンクを2つ用意しました。
+
+- **スマホで置く**：https://deploy.workers.cloudflare.com/?url=https://github.com/yukawa-care/inno-renrakucho
+  押すと、Cloudflare の置く画面がすぐ開きます
+- **パソコンで置く**：https://github.com/yukawa-care/inno-renrakucho/archive/refs/heads/main.zip
+  押すと、一式の zip がすぐ保存されます
+
+このページからなら、下のボタンでも同じです。
 
 **図で見る置き方：** https://staff-board.bonojam.workers.dev/tebiki
 
@@ -30,7 +37,9 @@
 
 ## パソコンで置くとき
 
-このページの緑色の「Code」ボタン →「Download ZIP」でダウンロードし、「置き方.md」の手順で進めます。
+次のリンクを押すと、一式の zip が保存されます（このページの緑色の「Code」→「Download ZIP」と同じものです）。あとは「置き方.md」の手順で進めます。
+
+https://github.com/yukawa-care/inno-renrakucho/archive/refs/heads/main.zip
 
 ## まず触ってみる
 
